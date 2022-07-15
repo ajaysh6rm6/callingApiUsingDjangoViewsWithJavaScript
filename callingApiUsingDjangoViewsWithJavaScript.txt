@@ -1,0 +1,74 @@
+###DJANGO VIEWS.PY>>>>>>>>>>>>>>>>>>>>
+
+def validate_username(request):
+    username = request.POST.get('username')
+    service = request.POST.get('service')
+    location = request.POST.get('location')
+    print(username, service, location)
+    try:        
+        print("aj")
+        #checking subscriber is exixts or not
+        url = 'http://127.0.0.1:8000/wsp/getsubscriber/'
+        headers = {'Content-Type': 'application/json'}
+        all_data = {
+                    "username":username,
+                    "service":service,
+                    "location":location,
+                }
+        payload = all_data
+        payload = json.dumps(all_data, indent = 4)
+        r = requests.post(url, headers=headers, data=payload)
+        print(r.status_code)
+        if r.status_code == 200:
+            json_status = {'status':'1', 'msg':'Subscriber exists'}
+        else:
+            json_status = {'status':'0', 'msg':'Subscriber not exit'}   
+    except Exception as e:
+        #logger.error(e)
+        json_status = {'status':'0', 'msg':'Subscriber not exit'} 
+    return JsonResponse(json_status) 
+	
+###JS>>>>>>>>>>>>>>>>>>>>
+	
+	<script>
+	
+    $('#validate-voucher-username').on('paste', validateusername);
+    $("#validate-voucher-username").keyup(validateusername);
+	
+    function validateusername() {
+        var username = $(".reg-username").val();
+        var input_provision = $(".provision").val();
+        let csr = $("input[name=csrfmiddlewaretoken").val();
+        var service = "premium"
+        var location = "all"
+        mydata = {
+            username: username,
+            csrfmiddlewaretoken: csr,
+            service : service,
+            location : location,
+            input_provision:input_provision
+        };
+        $.ajax({
+            url: "{% url 'validate_username' %}",
+            method: "POST",
+            data: mydata,
+            success: function(data) {
+                status = data.status
+                message = data.msg
+                planid = data.planid
+                console.log(status)
+                if (status == '1') {
+                    document.getElementById('register-username').style.borderColor = "green"
+                    document.getElementById('regusermsg').style.color = "green"
+                    $('#regusermsg').html(message)
+                    $('#showHideDiveVoucher').css('display','none');//@j140722
+                }else {
+                    document.getElementById('register-username').style.borderColor = "red"
+                    document.getElementById('regusermsg').style.color = "red"
+                    $('#regusermsg').html(message)
+					$('#showHideDiveVoucher').css('display','block');//@j140722
+                }
+            },
+        });
+    }
+</script>
